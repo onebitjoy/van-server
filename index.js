@@ -1,5 +1,4 @@
 import express from "express"
-import { rateLimit } from 'express-rate-limit'
 import compression from "compression"
 const app = express()
 
@@ -12,14 +11,6 @@ const data = [
   { id: "6", name: "Green Wonder", price: 70, description: "With this van, you can take your travel life to the next level. The Green Wonder is a sustainable vehicle that's perfect for people who are looking for a stylish, eco-friendly mode of transport that can go anywhere.", imageUrl: "https://assets.scrimba.com/advanced-react/react-router/green-wonder.png", type: "rugged", hostId: "123" }
 ]
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-})
-
-app.use(limiter)
 app.use(compression())
 app.set('trust proxy', 1)
 
