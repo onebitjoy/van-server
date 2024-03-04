@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "username": "asddasdas",
+      "email": "asdf@gmail.com",
+      "password": "password"
+    },
+    {
+      "username": "asddasdas",
+      "email": "qwer@gmail.com",
+      "password": "password"
+    },
+    {
+      "username": "asddasdas",
+      "email": "zxcv@gmail.com",
+      "password": "password"
+    },
+    {
+      "email": "zxcv@gmail.com",
+      "password": "password",
+      "username": "asddasdas"
+    },
+    {
+      "email": "zxvxasdsdafgxcv@gmail.com",
+      "password": "password",
+      "username": "asddasdas"
+    },
+    {
+      "email": "zxvxasdsssdafssgxcv@gmail.com",
+      "password": "password",
+      "username": "asddasdvxfgvxas"
+    }
+  ]
+}

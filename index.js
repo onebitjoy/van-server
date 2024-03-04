@@ -1,8 +1,17 @@
 import express from "express"
 import compression from "compression"
 import cors from "cors"
+import * as fs from "fs"
+import { error } from "console"
 
 const app = express()
+
+function errorMsg(e) {
+  return { error: e, data: null }
+}
+function successMsg(e) {
+  return { data: e, error: null }
+}
 
 const data = [
   { id: "1", name: "Modest Explorer", price: 60, description: "The Modest Explorer is a van designed to get you out of the house and into nature. This beauty is equipped with solar panels, a composting toilet, a water tank and kitchenette. The idea is that you can pack up your home and escape for a weekend or even longer!", imageUrl: "https://assets.scrimba.com/advanced-react/react-router/modest-explorer.png", type: "simple", hostId: "123" },
@@ -15,34 +24,130 @@ const data = [
 
 app.use(cors())
 app.use(compression())
+app.use(express.json())
 app.set('trust proxy', 1)
 
+// functions
+function readJsonFile(filePath, cb) {
+  fs.readFile(filePath, 'utf-8', (err, data) => {
+    if (err) return { error: "Can't access files!" }
+    cb(err, data)
+  })
+}
+
+// GET ==========================
 app.get("/ip", (req, res) => {
   res.send(req.ip)
 })
 
 app.get("/api/vans", (req, res) => {
-  res.json(data)
+  res.json(successMsg(data))
 })
 
 app.get("/api/vans/:id", (req, res) => {
   const van = data.filter(van => van.id === req.params.id)
-  res.json(van)
+  res.json(successMsg(van))
 })
 
 app.get("/api/host/vans/:host", (req, res) => {
   const van = data.filter(van => van.hostId === "123")
-  res.json(van)
+  res.json(successMsg(van))
 })
 
 app.get("/api/host/vans/:host/:id", (req, res) => {
   let van = data.filter(van => van.hostId === req.params.host)
   van = van.filter(van => van.id === req.params.id)
-  res.json(van)
+  res.json(successMsg(van))
+})
+// =========================
+
+
+
+// POST ============================
+app.post("/users/login", async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    if (!email || !password) {
+      return res.json(successMsg("No email or password provided!"))
+    }
+
+    readJsonFile("./data.json", (err, d) => {
+      const { users } = JSON.parse(d)
+      const user = users.filter(u => {
+        return (u.email === email) && (u.password === password)
+      })
+
+      if (user.length === 0) {
+        return res.status(404).json(errorMsg("User not found!"))
+      }
+
+      /*TODO : remove this code when database is applied*/
+      if (user.length > 1) {
+        return res.status(404).json(errorMsg("TF"))
+      }
+
+      res.send(successMsg(user))
+    })
+  } catch (error) {
+    res.status(404).json(errorMsg("Something went wrong!"))
+  }
 })
 
+
+app.post("/users/signup", async (req, res) => {
+  try {
+    const { email, password, username } = req.body
+
+    if (!email || !password || !username) {
+      return res.json(errorMsg("Please provide full details!"))
+    }
+
+    const user = { email, password, username }
+
+    readJsonFile("./data.json", (err, data) => {
+      try {
+        const jsonData = JSON.parse(data)
+
+        // check if users already exists
+        const emails = jsonData.users.reduce((acc, curr) => {
+          acc.push(curr.email)
+          return acc
+        }, [])
+
+        const usernames = jsonData.users.reduce((acc, curr) => {
+          acc.push(curr.username)
+          return acc
+        }, [])
+
+        if (emails.includes(email) || usernames.includes(username)) {
+          return res.status(403).json(errorMsg("User already exists!"))
+        }
+        // ------------------
+
+        jsonData.users.push(user)
+
+        const updatedJsonData = JSON.stringify(jsonData, null, 2)
+        fs.writeFile("./data.json", updatedJsonData, (err) => {
+          if (err)
+            return res.status(500).json(errorMsg("Internal Server Error"))
+          return res.status(201).send(successMsg(user))
+        })
+      } catch (error) {
+        console.log(error)
+        return res.status(500).json(errorMsg("Parsing went wrong!"))
+      }
+    })
+
+  } catch (error) {
+    res.status(404).json(errorMsg("Something went wrong!"))
+  }
+})
+
+//  ============================
+
 app.get("*", (req, res) => {
-  res.status(404).json([])
+  res.status(404).json(errorMsg("Wrong file path or HTTP code!"))
 })
 
 const port = process.env.PORT || 3000
